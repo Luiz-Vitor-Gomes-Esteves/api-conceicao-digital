@@ -3,27 +3,21 @@
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-/*
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-*/
+use App\Http\Middleware\AuthDeviceMiddleware;
 
-Route::get('/events', [EventsController::class, 'showAll']);
+Route::middleware(AuthDeviceMiddleware::class)->group(function () {
+    Route::get('/events', [EventsController::class, 'showAll']);
+    Route::post('/eventsByType', [EventsController::class, 'showEventsByType']);
+    Route::get('/eventTypes', [EventTypeController::class, 'showAll']);
+});
 
-Route::post('/events', [EventsController::class, 'create']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/events', [EventsController::class, 'create']);
+    Route::patch('/events', [EventsController::class, 'update']);
+    Route::delete('/events', [EventsController::class, 'delete']);
+});
 
-Route::patch('/events', [EventsController::class, 'update']);
-
-Route::delete('/events', [EventsController::class, 'delete']);
-
-
-Route::post('/eventsByType', [EventsController::class, 'showEventsByType']);
-
-Route::get('/eventTypes', [EventTypeController::class, 'showAll']);
-
+// Public user routes
 Route::post('/user/login', [UserController::class, 'login']);
-
 Route::post('/user/register', [UserController::class, 'register']);
