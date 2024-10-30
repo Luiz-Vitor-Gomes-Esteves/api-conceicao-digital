@@ -12,7 +12,7 @@ class EventsController extends Controller
     public function showAll(): mixed
     {
         try{
-            $events = Events::with('eventType')->get(); 
+            $events = Events::with('eventType')->get();
             return response()->json($events);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
@@ -39,15 +39,15 @@ class EventsController extends Controller
                 'description' => 'required',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date',
-                'location' => 'required|string|max:255', 
+                'location' => 'required|string|max:255',
                 'time' => 'required|string',
                 'type_event_id' => 'sometimes|required|integer',
             ]);
-    
+
             if ($validator->fails()) {
                 return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 400);
             }
-    
+
             $event = Events::create($request->only([
                 'title',
                 'subtitle',
@@ -58,7 +58,7 @@ class EventsController extends Controller
                 'time',
                 'type_event_id',
             ]));
-    
+
             return response()->json($event, 201);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
@@ -85,7 +85,7 @@ class EventsController extends Controller
             }
 
             $event = Events::find($request['id']);
-            
+
             if (!$event) {
                 return response()->json(['message' => 'Event not found'], 404);
             }
@@ -111,13 +111,13 @@ class EventsController extends Controller
     {
         try {
             $event = Events::find($request['id']);
-        
+
             if (!$event) {
                 return response()->json(['message' => 'Event not found'], 404);
             }
-        
+
             $event->delete();
-        
+
             return response()->json(['message' => 'Event deleted successfully'], 200);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);

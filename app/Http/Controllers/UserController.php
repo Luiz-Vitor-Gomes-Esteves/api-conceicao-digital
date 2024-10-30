@@ -33,7 +33,7 @@ class UserController extends Controller
         }
 
         //$token = $user->createToken('auth_token', ['*'], now()->addWeek())->plainTextToken; //Configurar quando lançar
-        $token = $user->createToken('auth_token', ['*'], now()->AddMinute())->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
 
         return response()->json([
             'user' => [
