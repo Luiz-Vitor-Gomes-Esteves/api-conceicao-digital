@@ -3,18 +3,48 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
-use Dotenv\Validator;
+use App\Models\Device_EventType;
+use App\Models\EventType;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class DeviceController extends Controller
 {
-    public function showAll(): mixed
+    public function show(): mixed
     {
         try{
-            $events = Device::all();
+            $events = Device::where('id', '>', 0)->get();
             return response()->json($events);
         } catch (\Throwable $th) {
+            return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
+        }
+    }
+
+    public function showById(Request $request): mixed
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id' => ['required', 'integer', Rule::exists('devices')]
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 400);
+            }
+
+            $device_id = $request['id'];
+
+            $device = Device::where('id', $request['id'])->first();
+            $deviceEventTypes = Device_EventType::where('device_id', $device_id)->pluck('event_type_id');
+
+            $response = [
+                'id' => $device_id,
+                'name' => $device->name,
+                'event_types' => $deviceEventTypes,
+            ];
+
+            return response()->json($response);
+        }catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
         }
     }
@@ -23,7 +53,7 @@ class DeviceController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'events_notification_preferences' => 'sometimes|required|integer',
+                'name' => 'required|string|max:255'
             ]);
 
             if ($validator->fails()) {
@@ -85,29 +115,33 @@ class DeviceController extends Controller
         }
     }
 
-    public function updateNotificationEventsPreferences()
+    public function updateNotificationEventsPreferences(Request $request): mixed
     {
         try {
             $validator = Validator::make($request->all(), [
-                'id' => ['required','integer', Rule::exists('devices')],
-                'name' => 'sometimes|string|max:255'
+                'id' => ['required', 'integer', Rule::exists('devices')],
+                'events_notification_preferences' => 'sometimes|array',
+                'events_notification_preferences.*' => 'integer|exists:event_types,id',
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 400);
             }
 
-            $event = Device::find($request['id']);
+            $event = EventType::find($request['events_notification_preferences']);
+            $device = Device::find($request['id']);
 
-            if (!$event) {
-                return response()->json(['message' => 'Device not found'], 404);
+            if (!$event || !$device) {
+                return response()->json(['message' => 'EventType or Device not found'], 404);
             }
 
-            $event->update($request->only([
-                'name',
-            ]));
+            $device->eventTypes()->sync($request['events_notification_preferences']);
 
-            return response()->json($event, 200);
+            foreach ($request['events_notification_preferences'] as $eventTypeId) {
+                $device->eventTypes()->updateExistingPivot($eventTypeId, ['updated_at' => now()]);
+            }
+
+            return response()->json("Updated", 200);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
         }

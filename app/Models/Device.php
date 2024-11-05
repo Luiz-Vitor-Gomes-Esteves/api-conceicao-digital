@@ -11,15 +11,16 @@ class Device extends Model
 
     protected $fillable = [
         'id',
-        'events_notification_preferences'
+        'events_notification_preferences',
+        'name'
     ];
 
     protected $casts = [
         'events_notification_preferences' => 'array',
     ];
 
-    public function events()
+    public function eventTypes()
     {
-        return $this->belongsToMany(EventType::class, 'device_event');
+        return $this->belongsToMany(EventType::class, 'device_event_types', 'device_id', 'event_type_id');
     }
 }

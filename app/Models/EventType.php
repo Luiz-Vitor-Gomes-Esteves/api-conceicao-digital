@@ -18,4 +18,10 @@ class EventType extends Model
     {
         return $this->hasMany(Events::class, 'type_event_id');
     }
+
+    public function devices()
+    {
+        // O mesmo relacionamento em sentido inverso
+        return $this->belongsToMany(Device::class, 'device_event_types', 'event_type_id', 'device_id');
+    }
 }
