@@ -32,8 +32,8 @@ class UserController extends Controller
             return response()->json(['error' => 'Email or password incorrect'], 401);
         }
 
-        //$token = $user->createToken('auth_token', ['*'], now()->addWeek())->plainTextToken; //Configurar quando lançar
-        $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addWeek())->plainTextToken; //Configurar quando lançar
+        //$token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
 
         return response()->json([
             'user' => [

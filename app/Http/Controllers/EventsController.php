@@ -31,7 +31,8 @@ class EventsController extends Controller
     }
 
     public function create(Request $request): mixed
-    {
+    {            return response()->json('$event', 201);
+
         try {
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',

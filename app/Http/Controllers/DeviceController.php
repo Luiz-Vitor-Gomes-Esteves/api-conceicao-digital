@@ -40,6 +40,7 @@ class DeviceController extends Controller
             $response = [
                 'id' => $device_id,
                 'name' => $device->name,
+                'notification_token' => $device->notification_token,
                 'event_types' => $deviceEventTypes,
             ];
 
@@ -53,18 +54,27 @@ class DeviceController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255'
+                'name' => 'required|string|max:255',
+                'notification_token' => 'required|string|max:255'
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 400);
             }
 
-            $event = Device::create($request->only([
-                'name'
+            $device = Device::create($request->only([
+                'name',
+                'notification_token'
             ]));
 
-            return response()->json($event, 201);
+            $response = [
+                "id" => $device->id,
+                "name" => $device->name,
+                "notification_token" => $device->notification_token,
+                "event_types" => []
+            ];
+
+            return response()->json($response, 201);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
         }
@@ -75,24 +85,33 @@ class DeviceController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'id' => ['required','integer', Rule::exists('devices')],
-                'name' => 'sometimes|string|max:255'
+                'name' => 'sometimes|string|max:255',
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['message' => 'Invalid input', 'errors' => $validator->errors()], 400);
             }
 
-            $event = Device::find($request['id']);
+            $device = Device::find($request['id']);
 
-            if (!$event) {
+            if (!$device) {
                 return response()->json(['message' => 'Device not found'], 404);
             }
 
-            $event->update($request->only([
+            $device->update($request->only([
                 'name',
             ]));
 
-            return response()->json($event, 200);
+            $deviceEventTypes = Device_EventType::where('device_id', $device->id)->pluck('event_type_id');
+
+            $response = [
+                "id" => $device->id,
+                "name" => $device->name,
+                "notification_token" => $device->notification_token,
+                'event_types' => $deviceEventTypes,
+            ];
+
+            return response()->json($response, 200);
         } catch (\Throwable $th) {
             return response()->json(['message'=> $th->getMessage(),'errors'=> $th->getMessage()],500);
         }

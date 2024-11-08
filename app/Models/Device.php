@@ -12,7 +12,8 @@ class Device extends Model
     protected $fillable = [
         'id',
         'events_notification_preferences',
-        'name'
+        'name',
+        'notification_token'
     ];
 
     protected $casts = [
